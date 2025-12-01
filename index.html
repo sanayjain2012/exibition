@@ -282,13 +282,6 @@
       function validCode(code){ return ['101','202','303','404','505'].includes(code); }
       function pickQuestionFor(code){ const poolFor = pool.filter(x=>x.id===code); if(poolFor.length===0) return null; return poolFor[Math.floor(Math.random()*poolFor.length)]; }
 
-      // --- IMPORTANT: create ctx defensively ---
-      const ctx = overlayCanvas && overlayCanvas.getContext ? overlayCanvas.getContext('2d') : null;
-
-      // resize function (sets canvas pixel size) — we'll call it right after showing the canvas
-      let W=0,H=0;
-      function resize(){ if(!overlayCanvas) return; W=overlayCanvas.width = overlayCanvas.clientWidth; H=overlayCanvas.height = overlayCanvas.clientHeight; }
-
       // Secret code submit behaviour
       secretSubmit.addEventListener('click', ()=>{
         const entered = (secretInput.value||'').trim();
@@ -300,42 +293,25 @@
           challengeDiv.style.display = 'none';
           return;
         }
-        // valid
+        // valid: set code, enable buttons, show question and start animation immediately
         secretMsg.textContent = 'Code accepted — challenge unlocked';
         secretMsg.style.color = 'var(--accent)';
         currentCode = entered;
         unlockBtn.disabled = false; newQBtn.disabled = false;
-        // immediately show a question for this code
         current = pickQuestionFor(currentCode);
-        if(current){
-          showChallenge();
-          // ensure canvas sizing is correct: make visible, then resize, then run animation
-          overlayCanvas.style.display = 'block';
-          resize(); // <-- crucial: compute W/H after making canvas visible
-          triggerAnimation(currentCode, 'start');
-        }
+        if(current){ showChallenge(); triggerAnimation(currentCode, 'start'); }
       });
 
       // unlock and new question buttons now operate only when code validated
       unlockBtn.addEventListener('click', ()=>{
         if(!currentCode) return;
         current = pickQuestionFor(currentCode);
-        if(current){
-          showChallenge();
-          overlayCanvas.style.display = 'block';
-          resize();
-          triggerAnimation(currentCode, 'start');
-        }
+        if(current){ showChallenge(); triggerAnimation(currentCode, 'start'); }
       });
       newQBtn.addEventListener('click', ()=>{
         if(!currentCode) return;
         current = pickQuestionFor(currentCode);
-        if(current){
-          showChallenge();
-          overlayCanvas.style.display = 'block';
-          resize();
-          triggerAnimation(currentCode, 'start');
-        }
+        if(current){ showChallenge(); triggerAnimation(currentCode, 'start'); }
       });
 
       function showChallenge(){
@@ -351,54 +327,55 @@
       });
 
       // Full-screen overlay animations with 5s auto-stop
+      const ctx = overlayCanvas.getContext ? overlayCanvas.getContext('2d') : null; let W=0,H=0; function resize(){ if(!overlayCanvas) return; W = overlayCanvas.width = window.innerWidth;
+  H = overlayCanvas.height = window.innerHeight; }
+      window.addEventListener('resize', resize); resize();
+
       let animFrame = null; let stopTimeout = null;
-      function clearAnim(){ if(animFrame) cancelAnimationFrame(animFrame); animFrame=null; if(stopTimeout) clearTimeout(stopTimeout); stopTimeout=null; if(ctx) ctx.clearRect(0,0,W,H); overlayCanvas.style.display='none'; }
+      function clearAnim(){ if(animFrame) cancelAnimationFrame(animFrame); animFrame = null; if(stopTimeout) clearTimeout(stopTimeout); stopTimeout = null; if(ctx) ctx.clearRect(0,0,W,H); overlayCanvas.style.display='none'; }
 
       function triggerAnimation(code, state){
         if(!code) return;
-        // ensure canvas visible and sized
-        overlayCanvas.style.display = 'block';
-        resize(); // <-- ensure W/H are correct right before starting
+        // stop any running animation first
         clearAnim();
+        // make canvas visible
+        overlayCanvas.style.display = 'block';
         // choose animation by code
         if(code==='101') animBurst();
         if(code==='202') animConfetti();
         if(code==='303') animNumberRain();
         if(code==='404') animGlitch();
         if(code==='505') animOrbit();
+        // ensure it stops after 5 seconds
         stopTimeout = setTimeout(()=>{ clearAnim(); }, 5000);
       }
 
-      // animations implementations (unchanged logic but guarded by ctx)
+      // animations implementations
       function animBurst(){ if(!ctx) return; let particles=[]; for(let i=0;i<220;i++) particles.push({x:W/2,y:H/2,vx:(Math.random()-0.5)*14,vy:(Math.random()-0.5)*14,r:Math.random()*5+1,life:Math.random()*120+40,age:0});
-        function loop(){ if(!ctx) return; ctx.clearRect(0,0,W,H); for(let p of particles){ p.x+=p.vx; p.y+=p.vy; p.vy+=0.12; p.age++; ctx.globalAlpha=Math.max(0,1-p.age/p.life); ctx.fillStyle='rgba(255,210,77,'+ctx.globalAlpha+')'; ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill(); } animFrame=requestAnimationFrame(loop); }
+        function loop(){ ctx.clearRect(0,0,W,H); for(let p of particles){ p.x+=p.vx; p.y+=p.vy; p.vy+=0.12; p.age++; ctx.globalAlpha=Math.max(0,1-p.age/p.life); ctx.fillStyle='rgba(255,210,77,'+ctx.globalAlpha+')'; ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill(); } animFrame=requestAnimationFrame(loop); }
         loop(); }
 
       function animConfetti(){ if(!ctx) return; let conf=[]; const cols=['#ffd24d','#66d9ff','#ff8fb3','#9be66c']; for(let i=0;i<180;i++){ conf.push({x:Math.random()*W,y:Math.random()*-H,vy:Math.random()*1.6+0.6,size:Math.random()*14+6,col:cols[Math.floor(Math.random()*cols.length)],rot:Math.random()*Math.PI}) }
-        function loop(){ if(!ctx) return; ctx.clearRect(0,0,W,H); for(let c of conf){ c.y+=c.vy; c.x+=Math.sin(c.y/60)*0.6; ctx.save(); ctx.translate(c.x,c.y); ctx.rotate(c.rot); ctx.globalAlpha=0.95; ctx.fillStyle=c.col; ctx.fillRect(-c.size/2,-c.size/2,c.size,c.size*1.6); ctx.restore(); if(c.y>H+40){ c.y=-40; c.x=Math.random()*W; } } animFrame=requestAnimationFrame(loop); }
+        function loop(){ ctx.clearRect(0,0,W,H); for(let c of conf){ c.y+=c.vy; c.x+=Math.sin(c.y/60)*0.6; ctx.save(); ctx.translate(c.x,c.y); ctx.rotate(c.rot); ctx.globalAlpha=0.95; ctx.fillStyle=c.col; ctx.fillRect(-c.size/2,-c.size/2,c.size,c.size*1.6); ctx.restore(); if(c.y>H+40){ c.y=-40; c.x=Math.random()*W; } } animFrame=requestAnimationFrame(loop); }
         loop(); }
 
       function animNumberRain(){ if(!ctx) return; const chars=['0','1','2','3','4','5','6','7','8','9','-']; let drops=[]; for(let i=0;i<Math.floor(W/12);i++) drops.push({x:i*12+Math.random()*12,y:Math.random()*-H,vy:Math.random()*4+2});
-        function loop(){ if(!ctx) return; ctx.fillStyle='rgba(0,0,0,0.12)'; ctx.fillRect(0,0,W,H); ctx.font='16px monospace'; ctx.fillStyle='rgba(255,255,255,0.9)'; for(let d of drops){ d.y+=d.vy; const ch=chars[Math.floor(Math.random()*chars.length)]; ctx.fillText(ch,d.x,d.y); if(d.y>H+20) d.y=Math.random()*-100; } animFrame=requestAnimationFrame(loop); }
+        function loop(){ ctx.fillStyle='rgba(0,0,0,0.12)'; ctx.fillRect(0,0,W,H); ctx.font='16px monospace'; ctx.fillStyle='rgba(255,255,255,0.9)'; for(let d of drops){ d.y+=d.vy; const ch=chars[Math.floor(Math.random()*chars.length)]; ctx.fillText(ch,d.x,d.y); if(d.y>H+20) d.y=Math.random()*-100; } animFrame=requestAnimationFrame(loop); }
         loop(); }
 
-      function animGlitch(){ if(!ctx) return; let t=0; function loop(){ if(!ctx) return; ctx.clearRect(0,0,W,H); const g=ctx.createLinearGradient(0,0,W,H); g.addColorStop(0,'#051421'); g.addColorStop(1,'#0b1430'); ctx.fillStyle=g; ctx.fillRect(0,0,W,H); for(let i=0;i<10;i++){ const y=(Math.sin((t+i)/10)*30)+(i*(H/10)); ctx.fillStyle='rgba(255,255,255,0.02)'; ctx.fillRect(0,y+Math.sin(t/8+i)*6,W,6); } ctx.font='120px serif'; ctx.textAlign='center'; ctx.fillStyle='rgba(255,210,77,0.18)'; ctx.fillText('ERROR',W/2+Math.sin(t/10)*8,H/2+Math.cos(t/8)*8); ctx.globalCompositeOperation='lighter'; ctx.fillStyle='rgba(255,0,80,0.06)'; ctx.fillText('ERROR',W/2+Math.sin(t/6)*28,H/2+Math.cos(t/9)*-18); ctx.fillStyle='rgba(0,200,255,0.04)'; ctx.fillText('ERROR',W/2+Math.sin(t/9)*-28,H/2+Math.cos(t/7)*18); ctx.globalCompositeOperation='source-over'; t+=1; animFrame=requestAnimationFrame(loop); } loop(); }
+      function animGlitch(){ if(!ctx) return; let t=0; function loop(){ ctx.clearRect(0,0,W,H); const g=ctx.createLinearGradient(0,0,W,H); g.addColorStop(0,'#051421'); g.addColorStop(1,'#0b1430'); ctx.fillStyle=g; ctx.fillRect(0,0,W,H); for(let i=0;i<10;i++){ const y=(Math.sin((t+i)/10)*30)+(i*(H/10)); ctx.fillStyle='rgba(255,255,255,0.02)'; ctx.fillRect(0,y+Math.sin(t/8+i)*6,W,6); } ctx.font='120px serif'; ctx.textAlign='center'; ctx.fillStyle='rgba(255,210,77,0.18)'; ctx.fillText('ERROR',W/2+Math.sin(t/10)*8,H/2+Math.cos(t/8)*8); ctx.globalCompositeOperation='lighter'; ctx.fillStyle='rgba(255,0,80,0.06)'; ctx.fillText('ERROR',W/2+Math.sin(t/6)*28,H/2+Math.cos(t/9)*-18); ctx.fillStyle='rgba(0,200,255,0.04)'; ctx.fillText('ERROR',W/2+Math.sin(t/9)*-28,H/2+Math.cos(t/7)*18); ctx.globalCompositeOperation='source-over'; t+=1; animFrame=requestAnimationFrame(loop); } loop(); }
 
       function animOrbit(){ if(!ctx) return; let objs=[]; const cx=W/2, cy=H/2; for(let i=0;i<12;i++) objs.push({angle:Math.random()*Math.PI*2,r:80+i*26,speed:0.01+i*0.002,val:(i%2?i:-i)});
-        function loop(){ if(!ctx) return; ctx.fillStyle='rgba(0,0,0,0.12)'; ctx.fillRect(0,0,W,H); ctx.font='20px monospace'; ctx.textAlign='center'; for(let o of objs){ o.angle+=o.speed; const x=cx+Math.cos(o.angle)*o.r; const y=cy+Math.sin(o.angle)*o.r; ctx.fillStyle='rgba(255,255,255,0.95)'; ctx.fillText(o.val,x,y); } animFrame=requestAnimationFrame(loop); } loop(); }
+        function loop(){ ctx.fillStyle='rgba(0,0,0,0.12)'; ctx.fillRect(0,0,W,H); ctx.font='20px monospace'; ctx.textAlign='center'; for(let o of objs){ o.angle+=o.speed; const x=cx+Math.cos(o.angle)*o.r; const y=cy+Math.sin(o.angle)*o.r; ctx.fillStyle='rgba(255,255,255,0.95)'; ctx.fillText(o.val,x,y); } animFrame=requestAnimationFrame(loop); } loop(); }
 
-      // init tiny idle message (only if ctx available)
-      if (ctx) {
-        resize();
-        ctx.clearRect(0,0,W,H); ctx.font='18px sans-serif'; ctx.fillStyle='rgba(255,255,255,0.06)'; ctx.textAlign='center'; ctx.fillText('Ark mode — open Easter Egg and unlock a challenge', W/2, H/2);
-      }
+      // init tiny idle message
+      if(ctx){ ctx.clearRect(0,0,W,H); ctx.font='18px sans-serif'; ctx.fillStyle='rgba(255,255,255,0.06)'; ctx.textAlign='center'; ctx.fillText('Ark mode — open Easter Egg and unlock a challenge', W/2, H/2); }
 
       // keyboard shortcut for quick testing
-      document.addEventListener('keydown', e=>{ if(e.key==='q'){ if(!currentCode) return; current=pickQuestionFor(currentCode); showChallenge(); overlayCanvas.style.display='block'; resize(); triggerAnimation(currentCode,'start'); } });
+      document.addEventListener('keydown', e=>{ if(e.key==='q'){ if(!currentCode) return; current=pickQuestionFor(currentCode); showChallenge(); triggerAnimation(currentCode,'start'); } });
 
     }); // DOMContentLoaded end
   </script>
 
 </body>
 </html>
-
