@@ -3,71 +3,187 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Integers — Interactive Exhibition (Ark Mode) — Fixed</title>
+  <title>Integers — Interactive Exhibition (Ark Mode)</title>
   <style>
-    :root{--accent:#ffd24d;--muted:#c7d6ef}
+    :root{
+      --bg:#071226;
+      --card:#0b1b2b;
+      --accent:#ffd24d;
+      --muted:#c7d6ef;
+    }
     *{box-sizing:border-box}
-    html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:#041026;color:#e6f0fb}
-    body{display:flex}
-    #sidebar{width:240px;background:rgba(255,255,255,0.03);padding:18px;border-right:1px solid rgba(255,255,255,0.03)}
-    #nav a{display:block;color:var(--muted);padding:10px 12px;text-decoration:none;cursor:pointer}
-    #nav a.active{color:var(--accent);font-weight:700}
-    #main{flex:1;padding:24px;overflow:auto;height:100vh}
-    .card{background:rgba(255,255,255,0.03);padding:14px;border-radius:10px;margin-bottom:12px}
-    .muted-block{background:rgba(255,255,255,0.02);padding:10px;border-radius:8px;color:var(--muted)}
-    #overlayCanvas{position:fixed;inset:0;width:100%;height:100%;z-index:9999;pointer-events:none;display:none}
-    button{cursor:pointer;padding:8px;border-radius:6px;background:var(--accent);border:0;color:#042133;font-weight:700}
-    input{padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:inherit}
-    label{margin-right:6px}
-    .small-muted{color:var(--muted);font-size:0.95rem}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:Inter,system-ui,Segoe UI,Roboto,Arial;
+      color:#e6f0fb;
+      background:radial-gradient(circle at 20% 20%, #0a1933 0%, #03101f 70%, #000a12 100%);
+      overflow:hidden;
+      display:flex;
+    }
+
+    /* --- LEFT SIDEBAR --- */
+    #sidebar{
+      width:260px;
+      background:rgba(255,255,255,0.04);
+      backdrop-filter:blur(10px);
+      border-right:2px solid rgba(255,255,255,0.08);
+      padding:20px 0;
+      position:relative;
+      transition:0.3s ease;
+      z-index:20;
+    }
+    #sidebar.collapsed{ width:70px; }
+    #toggleBtn{ width:40px; height:40px; display:flex; align-items:center; justify-content:center; border-radius:10px; margin:0 auto 20px auto; background:rgba(255,255,255,0.07); cursor:pointer; }
+    #toggleBtn div{ width:22px; height:3px; background:var(--accent); margin:4px 0; border-radius:3px; }
+    #nav a{ display:block; padding:14px 22px; color:var(--muted); text-decoration:none; font-size:1.05rem; transition:0.25s; }
+    #nav a:hover{ color:var(--accent); background:rgba(255,255,255,0.08); box-shadow:0 0 25px rgba(255,210,77,0.9); }
+    #nav a.active{ color:var(--accent); font-weight:700; }
+    #sidebar.collapsed #nav a span{ display:none; }
+
+    /* --- MAIN CONTENT --- */
+    #main{ flex:1; overflow-y:auto; height:100vh; padding:30px; }
+    .page{display:none}
+    .page.active{display:block}
+
+    .card{ background:rgba(255,255,255,0.06); padding:20px; border-radius:15px; margin-bottom:20px; box-shadow:0 0 18px rgba(255,210,77,0.25); transition:0.25s; }
+    .card:hover{ background:rgba(255,255,255,0.12); box-shadow:0 0 45px rgba(255,210,77,0.95); transform:scale(1.025); }
+
+    /* --- CALCULATOR BRIGHTER --- */
+    .calc{ background:rgba(255,255,255,0.18); border:3px solid var(--accent); box-shadow:0 0 45px rgba(255,210,77,0.95); }
+    .muted-block{ background:rgba(255,255,255,0.02); padding:10px; border-radius:8px; color:var(--muted) }
+
+    /* --- FULLSCREEN ANIM CANVAS --- */
+    #overlayCanvas{ position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:35; display:none }
+
+    /* small screens adjustments */
+    @media (max-width:900px){
+      #sidebar{ width:200px; display:block; }
+      #main{ padding:20px; }
+    }
   </style>
 </head>
 <body>
+
   <div id="sidebar">
-    <div style="font-weight:700;margin-bottom:10px">Menu</div>
+    <div id="toggleBtn" aria-label="Toggle menu" title="Toggle menu">
+      <div></div><div></div><div></div>
+    </div>
     <nav id="nav">
-      <a data-page="how" class="active">How to Use</a>
-      <a data-page="uses">Uses</a>
-      <a data-page="india">India</a>
-      <a data-page="basics">Basics</a>
-      <a data-page="easter">Easter Egg</a>
+      <a href="#how" data-page="how" class="active"><span>How to Use</span></a>
+      <a href="#uses" data-page="uses"><span>Uses of Integers</span></a>
+      <a href="#india" data-page="india"><span>Indian Contributions</span></a>
+      <a href="#real" data-page="real"><span>Real Life Examples</span></a>
+      <a href="#basics" data-page="basics"><span>Integer Basics</span></a>
+      <a href="#easter" data-page="easter"><span>Easter Egg</span></a>
     </nav>
   </div>
 
   <div id="main">
-    <section id="how" class="page active"><div class="card"><h2>How to use</h2><p class="small-muted">Use the left menu. For Easter Egg: enter a secret code, then answer the shown question.</p></div></section>
 
-    <section id="uses" class="page"><div class="card"><h2>Uses</h2><p class="muted-block">Short examples: math, computing, everyday.</p></div></section>
+    <section id="how" class="page active">
+      <div class="card">
+        <h2>How to Use This Website</h2>
+        <p class="muted">Use the left menu to jump between concise pages. Hover cards to see the glow; click tiles for more detail. Open Easter Egg for interactive challenges.</p>
+      </div>
+    </section>
 
-    <section id="india" class="page"><div class="card"><h2>Contributions (India)</h2><p class="muted-block">Brahmagupta, place-value, modern research.</p></div></section>
+    <section id="uses" class="page">
+      <div class="card">
+        <h2>Uses of Integers</h2>
+        <div class="grid">
+          <div class="card demo" data-info="Integers in algebra: solving equations and working with sequences">Mathematics</div>
+          <div class="card demo" data-info="Programming & computing: indices, counters, integer types">Computing</div>
+          <div class="card demo" data-info="Engineering: measurements, floor numbers, and offsets">Everyday</div>
+        </div>
+        <div id="usesInfo" class="muted-block" style="margin-top:12px">Hover or click a card to learn more.</div>
+      </div>
+    </section>
 
-    <section id="basics" class="page"><div class="card"><h2>Basics</h2><p class="muted-block">Integers: {...,-2,-1,0,1,2,...}</p></div></section>
+    <section id="india" class="page">
+      <div class="card">
+        <h2>Contributions from India</h2>
+        <p class="muted">Snapshots of Indian contributions to integers and numerals.</p>
+        <div class="grid">
+          <div class="card demo" data-info="Brahmagupta: rules for zero and negatives">Brahmagupta</div>
+          <div class="card demo" data-info="Place-value system: decimal notation and zero">Place-value</div>
+          <div class="card demo" data-info="Modern research: cryptography & number theory">Modern research</div>
+        </div>
+        <div id="indiaInfo" class="muted-block" style="margin-top:12px">Hover or click a tile for a short detail.</div>
+      </div>
+    </section>
+
+    <section id="real" class="page">
+      <div class="card">
+        <h2>Real-life examples</h2>
+        <div class="grid">
+          <div class="card demo" data-info="Bank balances: positives and negatives">Banking</div>
+          <div class="card demo" data-info="Temperature scales: negative integers for below zero">Temperature</div>
+          <div class="card demo" data-info="Games: scores, lives, levels represented as integers">Games</div>
+        </div>
+        <div id="realInfo" class="muted-block" style="margin-top:12px">Hover a tile or click to read a concise explanation.</div>
+      </div>
+    </section>
+
+    <section id="basics" class="page">
+      <div class="card">
+        <h2>Integer Basics</h2>
+        <div class="grid">
+          <div class="card">
+            <h3>Definition</h3>
+            <p>Whole numbers and their negatives: {..., -3, -2, -1, 0, 1, 2, 3, ...}</p>
+          </div>
+          <div class="card">
+            <h3>Operations</h3>
+            <p>Addition & multiplication close the set; division may not.</p>
+          </div>
+          <div class="card">
+            <h3>Properties</h3>
+            <p>Negative × Negative = Positive; 0 is additive identity.</p>
+          </div>
+        </div>
+
+        <div class="card calc" style="margin-top:12px">
+          <h3>Try: Integer operation</h3>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+            <input id="a" type="number" value="7" style="padding:8px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.04);color:inherit">
+            <select id="op" style="padding:8px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.04);color:inherit">
+              <option value="+">+</option>
+              <option value="-">-</option>
+              <option value="*">×</option>
+              <option value="/">÷</option>
+            </select>
+            <input id="b" type="number" value="-4" style="padding:8px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.04);color:inherit">
+            <button id="calc">Calculate</button>
+          </div>
+          <div class="muted-block" style="margin-top:12px">Result: <span id="res">—</span></div>
+        </div>
+      </div>
+    </section>
 
     <section id="easter" class="page">
       <div class="card">
         <h2>Easter Egg</h2>
-        <p class="small-muted">Enter a secret code (one of the valid codes) to unlock a challenge. Animations run fullscreen for 5s.</p>
+        <p class="muted">Unlock a challenge and answer it. Correct/incorrect feedback appears and triggers a full-screen animation that stops after 5 seconds.</p>
 
-        <!-- Secret code -->
-        <div style="display:flex;gap:8px;align-items:center;margin-top:10px">
-          <label for="secretCodeInput">Secret Code</label>
-          <input id="secretCodeInput" placeholder="101" />
+        <!-- SECRET CODE INPUT (new) -->
+        <div style="margin-top:12px;display:flex;align-items:center;gap:8px">
+          <label for="secretCodeInput" style="font-weight:700">Secret Code:</label>
+          <input id="secretCodeInput" placeholder="Enter code (e.g. 101)" style="padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:inherit">
           <button id="secretSubmit">Enter</button>
-          <div id="secretMsg" class="small-muted" style="margin-left:10px"></div>
+          <div id="secretMsg" style="color:var(--accent);font-weight:700"></div>
         </div>
 
-        <!-- Controls -->
-        <div style="display:flex;gap:8px;margin-top:12px">
-          <button id="unlockBtn" disabled>Unlock (same code)</button>
+        <div style="display:flex;gap:10px;margin-top:12px;align-items:center">
+          <button id="unlockBtn" disabled>Unlock</button>
           <button id="newQBtn" disabled>New Question</button>
         </div>
 
-        <!-- Challenge area -->
-        <div id="challenge" style="margin-top:12px;display:none">
+        <div id="challenge" style="margin-top:14px;display:none">
           <div class="card">
-            <div id="qText" style="font-weight:700"></div>
-            <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
-              <input id="answerInput" placeholder="Type answer" />
+            <div id="qText" style="font-weight:700;font-size:1.05rem"></div>
+            <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+              <input id="answerInput" placeholder="Type your answer here">
               <button id="submitAnswer">Submit</button>
             </div>
             <div id="fb" class="muted-block" style="margin-top:10px"></div>
@@ -75,287 +191,214 @@
         </div>
       </div>
     </section>
+
   </div>
 
   <canvas id="overlayCanvas"></canvas>
 
   <script>
-    // Defensive, single-file fix. If anything still fails, copy console output and paste here.
-    (function(){
-      try{
-        console.log('Fixed build: init');
+    // Ensure DOM loaded
+    document.addEventListener('DOMContentLoaded', ()=>{
+      const pages = document.querySelectorAll('.page');
+      const links = document.querySelectorAll('#nav a');
 
-        // Navigation
-        const navLinks = Array.from(document.querySelectorAll('#nav a'));
-        navLinks.forEach(a=>{
-          a.addEventListener('click', (e)=>{
-            e.preventDefault();
-            const page = a.dataset.page;
-            if(!page) return;
-            document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-            const target = document.getElementById(page);
-            if(target) target.classList.add('active');
-            navLinks.forEach(n=>n.classList.remove('active'));
-            a.classList.add('active');
-            console.log('nav ->', page);
-          });
+      // navigation click handler with safety checks
+      links.forEach(a=>{
+        a.addEventListener('click', (e)=>{
+          e.preventDefault();
+          const pageId = a.dataset.page;
+          const target = document.getElementById(pageId);
+          if(!target){
+            console.warn('Target page not found for', pageId);
+            const placeholder = document.createElement('section');
+            placeholder.id = pageId;
+            placeholder.className = 'page';
+            placeholder.innerHTML = `<div class="card"><h2>Coming soon</h2><p class="muted">The page "${pageId}" is not yet available.</p></div>`;
+            document.getElementById('main').appendChild(placeholder);
+          }
+
+          // hide all pages and remove active links
+          document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+          links.forEach(l=>l.classList.remove('active'));
+
+          const showTarget = document.getElementById(pageId);
+          if(showTarget){ showTarget.classList.add('active'); }
+
+          a.classList.add('active');
         });
+      });
 
-        // Elements for Easter Egg
-        const secretInput = document.getElementById('secretCodeInput');
-        const secretSubmit = document.getElementById('secretSubmit');
-        const secretMsg = document.getElementById('secretMsg');
-        const unlockBtn = document.getElementById('unlockBtn');
-        const newQBtn = document.getElementById('newQBtn');
-        const challengeDiv = document.getElementById('challenge');
-        const qText = document.getElementById('qText');
-        const answerInput = document.getElementById('answerInput');
-        const submitAnswer = document.getElementById('submitAnswer');
-        const fb = document.getElementById('fb');
-        const overlayCanvas = document.getElementById('overlayCanvas');
+      // toggle sidebar collapse
+      const toggleBtn = document.getElementById('toggleBtn');
+      toggleBtn.addEventListener('click', ()=> document.getElementById('sidebar').classList.toggle('collapsed'));
 
-        if(!overlayCanvas){
-          console.error('overlayCanvas element missing');
+      // hover demo cards show info
+      document.querySelectorAll('.demo').forEach(el=>{
+        el.addEventListener('mouseenter', ()=>{ const info = el.dataset.info; const target = el.closest('section').querySelector('.muted-block'); if(target) target.textContent = info; });
+        el.addEventListener('mouseleave', ()=>{ const target = el.closest('section').querySelector('.muted-block'); if(target) target.textContent = 'Hover or click a card to learn more.'; });
+        el.addEventListener('click', ()=>{ const info = el.dataset.info; const target = el.closest('section').querySelector('.muted-block'); if(target) target.textContent = info; });
+      });
+
+      // calculator
+      document.getElementById('calc').addEventListener('click', ()=>{
+        const a = parseInt(document.getElementById('a').value)||0;
+        const b = parseInt(document.getElementById('b').value)||0;
+        const op = document.getElementById('op').value; let r='?';
+        if(op=='+') r = a + b;
+        if(op=='-') r = a - b;
+        if(op=='*') r = a * b;
+        if(op=='/') r = (b===0)?'undefined (division by 0)' : Math.trunc(a / b) + ' (integer division, truncated)';
+        document.getElementById('res').textContent = r;
+      });
+
+      // Easter egg system
+      const pool = [
+        {id:'101', q:'What is -7 + 12?', a:'5'},
+        {id:'101', q:'If x = -3 and y = -4, what is x * y?', a:'12'},
+        {id:'202', q:'Which of these is an integer: 3.14, -8, √2?', a:'-8'},
+        {id:'202', q:'What is 0 times any integer?', a:'0'},
+        {id:'303', q:'What is (-2) * (-2)?', a:'4'},
+        {id:'303', q:'Which integer is even: 3, 11, -4, 7?', a:'-4'},
+        {id:'404', q:'If you subtract -5 from 2 what is the result?', a:'7'},
+        {id:'404', q:'Which is greater: -1 or -100?', a:'-1'},
+        {id:'505', q:'Integer division: 7 ÷ 3 (truncate) equals?', a:'2'},
+        {id:'505', q:'Round -2.7 towards zero gives?', a:'-2'}
+      ];
+
+      let current = null;
+      let currentCode = null; // holds validated secret code string
+
+      const secretInput = document.getElementById('secretCodeInput');
+      const secretSubmit = document.getElementById('secretSubmit');
+      const secretMsg = document.getElementById('secretMsg');
+      const unlockBtn = document.getElementById('unlockBtn');
+      const newQBtn = document.getElementById('newQBtn');
+      const challengeDiv = document.getElementById('challenge');
+      const qText = document.getElementById('qText');
+      const answerInput = document.getElementById('answerInput');
+      const fb = document.getElementById('fb');
+      const overlayCanvas = document.getElementById('overlayCanvas');
+
+      function validCode(code){ return ['101','202','303','404','505'].includes(code); }
+      function pickQuestionFor(code){ const poolFor = pool.filter(x=>x.id===code); if(poolFor.length===0) return null; return poolFor[Math.floor(Math.random()*poolFor.length)]; }
+
+      // --- IMPORTANT: create ctx defensively ---
+      const ctx = overlayCanvas && overlayCanvas.getContext ? overlayCanvas.getContext('2d') : null;
+
+      // resize function (sets canvas pixel size) — we'll call it right after showing the canvas
+      let W=0,H=0;
+      function resize(){ if(!overlayCanvas) return; W=overlayCanvas.width = overlayCanvas.clientWidth; H=overlayCanvas.height = overlayCanvas.clientHeight; }
+
+      // Secret code submit behaviour
+      secretSubmit.addEventListener('click', ()=>{
+        const entered = (secretInput.value||'').trim();
+        if(!validCode(entered)){
+          secretMsg.textContent = 'Invalid code — try again';
+          secretMsg.style.color = '#ff7b7b';
+          currentCode = null;
+          unlockBtn.disabled = true; newQBtn.disabled = true;
+          challengeDiv.style.display = 'none';
           return;
         }
-
-        const ctx = overlayCanvas.getContext && overlayCanvas.getContext('2d');
-        if(!ctx){
-          console.error('Canvas context could not be created');
+        // valid
+        secretMsg.textContent = 'Code accepted — challenge unlocked';
+        secretMsg.style.color = 'var(--accent)';
+        currentCode = entered;
+        unlockBtn.disabled = false; newQBtn.disabled = false;
+        // immediately show a question for this code
+        current = pickQuestionFor(currentCode);
+        if(current){
+          showChallenge();
+          // ensure canvas sizing is correct: make visible, then resize, then run animation
+          overlayCanvas.style.display = 'block';
+          resize(); // <-- crucial: compute W/H after making canvas visible
+          triggerAnimation(currentCode, 'start');
         }
+      });
 
-        // Data
-        const VALID = ['101','202','303','404','505'];
-        const pool = [
-          {id:'101', q:'What is -7 + 12?', a:'5'},
-          {id:'101', q:'If x = -3 and y = -4, what is x * y?', a:'12'},
-          {id:'202', q:'Which is an integer: 3.14, -8, √2?', a:'-8'},
-          {id:'202', q:'What is 0 times any integer?', a:'0'},
-          {id:'303', q:'What is (-2) * (-2)?', a:'4'},
-          {id:'303', q:'Which integer is even: 3, 11, -4, 7?', a:'-4'},
-          {id:'404', q:'If you subtract -5 from 2, what is the result?', a:'7'},
-          {id:'404', q:'Which is greater: -1 or -100?', a:'-1'},
-          {id:'505', q:'Integer division 7 ÷ 3 (truncate) = ?', a:'2'},
-          {id:'505', q:'Round -2.7 towards zero gives?', a:'-2'}
-        ];
-
-        function validCode(c){ return VALID.includes(String(c).trim()); }
-        function pickFor(code){ const list = pool.filter(x=>x.id===code); return list.length ? list[Math.floor(Math.random()*list.length)] : null; }
-
-        let current = null;
-        let currentCode = null;
-
-        // UI helpers
-        function enableControlsFor(code){
-          currentCode = code;
-          unlockBtn.disabled = false;
-          newQBtn.disabled = false;
-          secretMsg.textContent = 'Code accepted';
-          secretMsg.style.color = 'var(--accent)';
+      // unlock and new question buttons now operate only when code validated
+      unlockBtn.addEventListener('click', ()=>{
+        if(!currentCode) return;
+        current = pickQuestionFor(currentCode);
+        if(current){
+          showChallenge();
+          overlayCanvas.style.display = 'block';
+          resize();
+          triggerAnimation(currentCode, 'start');
         }
-        function disableControls(){
-          currentCode = null;
-          unlockBtn.disabled = true;
-          newQBtn.disabled = true;
-          secretMsg.textContent = '';
+      });
+      newQBtn.addEventListener('click', ()=>{
+        if(!currentCode) return;
+        current = pickQuestionFor(currentCode);
+        if(current){
+          showChallenge();
+          overlayCanvas.style.display = 'block';
+          resize();
+          triggerAnimation(currentCode, 'start');
         }
+      });
 
-        // Secret code submit
-        secretSubmit.addEventListener('click', ()=>{
-          const v = (secretInput.value||'').trim();
-          console.log('secret submit', v);
-          if(!validCode(v)){
-            secretMsg.textContent = 'Invalid code';
-            secretMsg.style.color = '#ff7b7b';
-            disableControls();
-            challengeDiv.style.display = 'none';
-            current = null;
-            return;
-          }
-          enableControlsFor(v);
-          // Immediately pick and show a question for that code
-          current = pickFor(v);
-          if(current){
-            showQuestion();
-            triggerAnimation(v, 'start');
-          } else {
-            console.warn('No question for code', v);
-          }
-        });
-
-        // Unlock / New question
-        unlockBtn.addEventListener('click', ()=>{
-          if(!currentCode) return;
-          current = pickFor(currentCode);
-          if(current){ showQuestion(); triggerAnimation(currentCode, 'start'); }
-        });
-        newQBtn.addEventListener('click', ()=>{
-          if(!currentCode) return;
-          current = pickFor(currentCode);
-          if(current){ showQuestion(); triggerAnimation(currentCode, 'start'); }
-        });
-
-        function showQuestion(){
-          if(!current) return;
-          challengeDiv.style.display = 'block';
-          qText.textContent = current.q;
-          answerInput.value = '';
-          fb.textContent = '';
-        }
-
-        // Submit answer
-        submitAnswer.addEventListener('click', ()=>{
-          const ans = (answerInput.value||'').trim();
-          if(!current){ fb.textContent = 'No active question'; fb.style.color = '#ff7b7b'; return; }
-          if(ans === ''){ fb.textContent = 'Please enter answer'; fb.style.color = '#ffd24d'; return; }
-          if(String(ans).toLowerCase() === String(current.a).toLowerCase()){
-            fb.textContent = 'Correct ✅';
-            fb.style.color = '#9be66c';
-            triggerAnimation(currentCode,'correct');
-          } else {
-            fb.textContent = 'Incorrect ❌';
-            fb.style.color = '#ff7b7b';
-            triggerAnimation(currentCode,'wrong');
-          }
-        });
-
-        // Canvas / animation plumbing
-        let W=0, H=0;
-        function resizeCanvas(){
-          W = overlayCanvas.width = overlayCanvas.clientWidth;
-          H = overlayCanvas.height = overlayCanvas.clientHeight;
-        }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
-
-        let rafId = null, stopT = null;
-        function clearAnimation(){
-          try{ if(rafId) cancelAnimationFrame(rafId); rafId = null; }
-          catch(e){ console.error('cancel frame error', e); }
-          if(stopT){ clearTimeout(stopT); stopT = null; }
-          if(ctx) ctx.clearRect(0,0,W,H);
-          overlayCanvas.style.display = 'none';
-        }
-
-        // Start animation for code
-        function triggerAnimation(code, state){
-          try{
-            if(!code){ console.warn('triggerAnimation called without code'); return; }
-            console.log('triggerAnimation', code, state);
-            clearAnimation();
-            overlayCanvas.style.display = 'block';
-            // small fade-in background (draw once)
-            if(ctx){ ctx.fillStyle = 'rgba(0,0,0,0.12)'; ctx.fillRect(0,0,W,H); }
-
-            if(code === '101') animBurst();
-            else if(code === '202') animConfetti();
-            else if(code === '303') animNumberRain();
-            else if(code === '404') animGlitch();
-            else if(code === '505') animOrbit();
-            else console.warn('Unknown code for animation:', code);
-
-            // ensure stop after ~5s
-            stopT = setTimeout(()=>{ clearAnimation(); console.log('animation ended (auto-stop)'); }, 5000);
-          }catch(err){
-            console.error('triggerAnimation error', err);
-          }
-        }
-
-        // Simple animation implementations (safe)
-        function animBurst(){
-          if(!ctx) return;
-          const parts = [];
-          for(let i=0;i<160;i++){
-            parts.push({
-              x:W/2, y:H/2,
-              vx:(Math.random()-0.5)*14, vy:(Math.random()-0.5)*14,
-              r:Math.random()*4+1, life: Math.random()*120+40, t:0,
-              hue: 40 + Math.random()*30
-            });
-          }
-          function loop(){
-            ctx.clearRect(0,0,W,H);
-            for(const p of parts){
-              p.x += p.vx; p.y += p.vy; p.vy += 0.08; p.t++;
-              const alpha = Math.max(0, 1 - p.t / p.life);
-              ctx.fillStyle = `hsla(${p.hue},90%,60%,${alpha})`;
-              ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
-            }
-            rafId = requestAnimationFrame(loop);
-          }
-          loop();
-        }
-
-        function animConfetti(){
-          if(!ctx) return;
-          const conf = []; const cols = ['#ffd24d','#66d9ff','#ff8fb3','#9be66c'];
-          for(let i=0;i<140;i++) conf.push({x:Math.random()*W, y:Math.random()*-H, vy:Math.random()*1.6+0.6, w:Math.random()*12+6, rot:Math.random()*Math.PI, col:cols[Math.floor(Math.random()*cols.length)]});
-          function loop(){
-            ctx.clearRect(0,0,W,H);
-            for(const c of conf){
-              c.y += c.vy; c.x += Math.sin(c.y/60)*0.6;
-              ctx.save(); ctx.translate(c.x,c.y); ctx.rotate(c.rot);
-              ctx.fillStyle = c.col; ctx.fillRect(-c.w/2, -c.w/2, c.w, c.w*1.4);
-              ctx.restore();
-              if(c.y > H + 40){ c.y = -40; c.x = Math.random()*W; }
-            }
-            rafId = requestAnimationFrame(loop);
-          }
-          loop();
-        }
-
-        function animNumberRain(){
-          if(!ctx) return;
-          const chars = ['0','1','2','3','4','5','6','7','8','9','-'];
-          const drops = [];
-          for(let i=0;i<Math.floor(W/12);i++) drops.push({x:i*12+Math.random()*12, y:Math.random()*-H, vy:Math.random()*4+2});
-          function loop(){
-            ctx.fillStyle = 'rgba(0,0,0,0.12)'; ctx.fillRect(0,0,W,H);
-            ctx.font = '16px monospace'; ctx.fillStyle = 'rgba(255,255,255,0.9)';
-            for(const d of drops){
-              d.y += d.vy;
-              const ch = chars[Math.floor(Math.random()*chars.length)];
-              ctx.fillText(ch, d.x, d.y);
-              if(d.y > H + 20) d.y = Math.random()*-100;
-            }
-            rafId = requestAnimationFrame(loop);
-          }
-          loop();
-        }
-
-        function animGlitch(){
-          if(!ctx) return;
-          let t = 0;
-          function loop(){
-            ctx.clearRect(0,0,W,H);
-            const g = ctx.createLinearGradient(0,0,W,H); g.addColorStop(0,'#051421'); g.addColorStop(1,'#0b1430'); ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
-            ctx.font = '120px serif'; ctx.textAlign = 'center';
-            ctx.fillStyle = 'rgba(255,210,77,0.16)';
-            ctx.fillText('ERROR', W/2 + Math.sin(t/10)*8, H/2 + Math.cos(t/8)*8);
-            t += 1;
-            rafId = requestAnimationFrame(loop);
-          }
-          loop();
-        }
-
-        function animOrbit(){
-          if(!ctx) return;
-          const objs = []; const cx = W/2, cy = H/2;
-          for(let i=0;i<12;i++) objs.push({angle:Math.random()*Math.PI*2, r:80+i*18, speed:0.01+i*0.002, val: (i%2?i:-i)});
-          function loop(){
-            ctx.fillStyle='rgba(0,0,0,0.12)'; ctx.fillRect(0,0,W,H);
-            ctx.font='20px monospace'; ctx.textAlign='center';
-            for(const o of objs){ o.angle += o.speed; const x = cx + Math.cos(o.angle)*o.r; const y = cy + Math.sin(o.angle)*o.r; ctx.fillStyle='rgba(255,255,255,0.95)'; ctx.fillText(o.val, x, y); }
-            rafId = requestAnimationFrame(loop);
-          }
-          loop();
-        }
-
-        console.log('Fixed build ready - try Easter Egg, code 101, 202, 303, 404, 505');
-      }catch(e){
-        console.error('Initialization error', e);
+      function showChallenge(){
+        if(!current) return;
+        challengeDiv.style.display='block'; qText.textContent = current.q; answerInput.value=''; fb.textContent=''; answerInput.focus();
       }
-    })();
+
+      document.getElementById('submitAnswer').addEventListener('click', ()=>{
+        const ans = (answerInput.value||'').trim(); if(ans===''){ fb.textContent='Please enter an answer'; fb.style.color='#ffd24d'; return; }
+        if(!current){ fb.textContent='No active question — enter a secret code first'; fb.style.color='#ff7b7b'; return; }
+        if(ans.toLowerCase() === current.a.toLowerCase()){ fb.textContent='Correct ✅'; fb.style.color='#9be66c'; triggerAnimation(currentCode, 'correct'); }
+        else { fb.textContent = 'Incorrect ❌ — try again'; fb.style.color='#ff7b7b'; triggerAnimation(currentCode, 'wrong'); }
+      });
+
+      // Full-screen overlay animations with 5s auto-stop
+      let animFrame = null; let stopTimeout = null;
+      function clearAnim(){ if(animFrame) cancelAnimationFrame(animFrame); animFrame=null; if(stopTimeout) clearTimeout(stopTimeout); stopTimeout=null; if(ctx) ctx.clearRect(0,0,W,H); overlayCanvas.style.display='none'; }
+
+      function triggerAnimation(code, state){
+        if(!code) return;
+        // ensure canvas visible and sized
+        overlayCanvas.style.display = 'block';
+        resize(); // <-- ensure W/H are correct right before starting
+        clearAnim();
+        // choose animation by code
+        if(code==='101') animBurst();
+        if(code==='202') animConfetti();
+        if(code==='303') animNumberRain();
+        if(code==='404') animGlitch();
+        if(code==='505') animOrbit();
+        stopTimeout = setTimeout(()=>{ clearAnim(); }, 5000);
+      }
+
+      // animations implementations (unchanged logic but guarded by ctx)
+      function animBurst(){ if(!ctx) return; let particles=[]; for(let i=0;i<220;i++) particles.push({x:W/2,y:H/2,vx:(Math.random()-0.5)*14,vy:(Math.random()-0.5)*14,r:Math.random()*5+1,life:Math.random()*120+40,age:0});
+        function loop(){ if(!ctx) return; ctx.clearRect(0,0,W,H); for(let p of particles){ p.x+=p.vx; p.y+=p.vy; p.vy+=0.12; p.age++; ctx.globalAlpha=Math.max(0,1-p.age/p.life); ctx.fillStyle='rgba(255,210,77,'+ctx.globalAlpha+')'; ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill(); } animFrame=requestAnimationFrame(loop); }
+        loop(); }
+
+      function animConfetti(){ if(!ctx) return; let conf=[]; const cols=['#ffd24d','#66d9ff','#ff8fb3','#9be66c']; for(let i=0;i<180;i++){ conf.push({x:Math.random()*W,y:Math.random()*-H,vy:Math.random()*1.6+0.6,size:Math.random()*14+6,col:cols[Math.floor(Math.random()*cols.length)],rot:Math.random()*Math.PI}) }
+        function loop(){ if(!ctx) return; ctx.clearRect(0,0,W,H); for(let c of conf){ c.y+=c.vy; c.x+=Math.sin(c.y/60)*0.6; ctx.save(); ctx.translate(c.x,c.y); ctx.rotate(c.rot); ctx.globalAlpha=0.95; ctx.fillStyle=c.col; ctx.fillRect(-c.size/2,-c.size/2,c.size,c.size*1.6); ctx.restore(); if(c.y>H+40){ c.y=-40; c.x=Math.random()*W; } } animFrame=requestAnimationFrame(loop); }
+        loop(); }
+
+      function animNumberRain(){ if(!ctx) return; const chars=['0','1','2','3','4','5','6','7','8','9','-']; let drops=[]; for(let i=0;i<Math.floor(W/12);i++) drops.push({x:i*12+Math.random()*12,y:Math.random()*-H,vy:Math.random()*4+2});
+        function loop(){ if(!ctx) return; ctx.fillStyle='rgba(0,0,0,0.12)'; ctx.fillRect(0,0,W,H); ctx.font='16px monospace'; ctx.fillStyle='rgba(255,255,255,0.9)'; for(let d of drops){ d.y+=d.vy; const ch=chars[Math.floor(Math.random()*chars.length)]; ctx.fillText(ch,d.x,d.y); if(d.y>H+20) d.y=Math.random()*-100; } animFrame=requestAnimationFrame(loop); }
+        loop(); }
+
+      function animGlitch(){ if(!ctx) return; let t=0; function loop(){ if(!ctx) return; ctx.clearRect(0,0,W,H); const g=ctx.createLinearGradient(0,0,W,H); g.addColorStop(0,'#051421'); g.addColorStop(1,'#0b1430'); ctx.fillStyle=g; ctx.fillRect(0,0,W,H); for(let i=0;i<10;i++){ const y=(Math.sin((t+i)/10)*30)+(i*(H/10)); ctx.fillStyle='rgba(255,255,255,0.02)'; ctx.fillRect(0,y+Math.sin(t/8+i)*6,W,6); } ctx.font='120px serif'; ctx.textAlign='center'; ctx.fillStyle='rgba(255,210,77,0.18)'; ctx.fillText('ERROR',W/2+Math.sin(t/10)*8,H/2+Math.cos(t/8)*8); ctx.globalCompositeOperation='lighter'; ctx.fillStyle='rgba(255,0,80,0.06)'; ctx.fillText('ERROR',W/2+Math.sin(t/6)*28,H/2+Math.cos(t/9)*-18); ctx.fillStyle='rgba(0,200,255,0.04)'; ctx.fillText('ERROR',W/2+Math.sin(t/9)*-28,H/2+Math.cos(t/7)*18); ctx.globalCompositeOperation='source-over'; t+=1; animFrame=requestAnimationFrame(loop); } loop(); }
+
+      function animOrbit(){ if(!ctx) return; let objs=[]; const cx=W/2, cy=H/2; for(let i=0;i<12;i++) objs.push({angle:Math.random()*Math.PI*2,r:80+i*26,speed:0.01+i*0.002,val:(i%2?i:-i)});
+        function loop(){ if(!ctx) return; ctx.fillStyle='rgba(0,0,0,0.12)'; ctx.fillRect(0,0,W,H); ctx.font='20px monospace'; ctx.textAlign='center'; for(let o of objs){ o.angle+=o.speed; const x=cx+Math.cos(o.angle)*o.r; const y=cy+Math.sin(o.angle)*o.r; ctx.fillStyle='rgba(255,255,255,0.95)'; ctx.fillText(o.val,x,y); } animFrame=requestAnimationFrame(loop); } loop(); }
+
+      // init tiny idle message (only if ctx available)
+      if (ctx) {
+        resize();
+        ctx.clearRect(0,0,W,H); ctx.font='18px sans-serif'; ctx.fillStyle='rgba(255,255,255,0.06)'; ctx.textAlign='center'; ctx.fillText('Ark mode — open Easter Egg and unlock a challenge', W/2, H/2);
+      }
+
+      // keyboard shortcut for quick testing
+      document.addEventListener('keydown', e=>{ if(e.key==='q'){ if(!currentCode) return; current=pickQuestionFor(currentCode); showChallenge(); overlayCanvas.style.display='block'; resize(); triggerAnimation(currentCode,'start'); } });
+
+    }); // DOMContentLoaded end
   </script>
+
 </body>
 </html>
+
