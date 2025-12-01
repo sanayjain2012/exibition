@@ -3,359 +3,182 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Integers — Interactive Exhibition (Ark Mode) — Fixed</title>
+  <title>Integers — Interactive Exhibition (Ark Mode) — Debug Build (Fixed)</title>
   <style>
     :root{--accent:#ffd24d;--muted:#c7d6ef}
     *{box-sizing:border-box}
     html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:#041026;color:#e6f0fb}
     body{display:flex}
-    #sidebar{width:240px;background:rgba(255,255,255,0.03);padding:18px;border-right:1px solid rgba(255,255,255,0.03)}
-    #nav a{display:block;color:var(--muted);padding:10px 12px;text-decoration:none;cursor:pointer}
+    #sidebar{width:260px;background:rgba(255,255,255,0.03);padding:18px;border-right:1px solid rgba(255,255,255,0.03)}
+    #nav a{display:block;color:var(--muted);padding:10px 12px;text-decoration:none}
     #nav a.active{color:var(--accent);font-weight:700}
     #main{flex:1;padding:24px;overflow:auto;height:100vh}
     .card{background:rgba(255,255,255,0.03);padding:14px;border-radius:10px;margin-bottom:12px}
     .muted-block{background:rgba(255,255,255,0.02);padding:10px;border-radius:8px;color:var(--muted)}
+    /* canvas initially hidden — we show it when running animations */
     #overlayCanvas{position:fixed;inset:0;width:100%;height:100%;z-index:9999;pointer-events:none;display:none}
-    button{cursor:pointer;padding:8px;border-radius:6px;background:var(--accent);border:0;color:#042133;font-weight:700}
-    input{padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:inherit}
-    label{margin-right:6px}
-    .small-muted{color:var(--muted);font-size:0.95rem}
+    button{cursor:pointer}
+    input{padding:8px;border-radius:6px}
   </style>
 </head>
 <body>
   <div id="sidebar">
     <div style="font-weight:700;margin-bottom:10px">Menu</div>
     <nav id="nav">
-      <a data-page="how" class="active">How to Use</a>
-      <a data-page="uses">Uses</a>
-      <a data-page="india">India</a>
-      <a data-page="basics">Basics</a>
-      <a data-page="easter">Easter Egg</a>
+      <a href="#how" data-page="how" class="active">How to Use</a>
+      <a href="#uses" data-page="uses">Uses</a>
+      <a href="#india" data-page="india">India</a>
+      <a href="#basics" data-page="basics">Basics</a>
+      <a href="#easter" data-page="easter">Easter Egg</a>
     </nav>
   </div>
 
   <div id="main">
-    <section id="how" class="page active"><div class="card"><h2>How to use</h2><p class="small-muted">Use the left menu. For Easter Egg: enter a secret code, then answer the shown question.</p></div></section>
+    <section id="how" class="page active"><div class="card"><h2>How to use</h2><p class="muted-block">Use left menu. This debug build logs to console to help diagnose issues.</p></div></section>
+    <section id="easter" class="page"><div class="card"><h2>Easter Egg (Debug)</h2>
+      <p class="muted-block">Enter secret code, then answer question. Console will print helpful logs.</p>
 
-    <section id="uses" class="page"><div class="card"><h2>Uses</h2><p class="muted-block">Short examples: math, computing, everyday.</p></div></section>
+      <div style="display:flex;gap:8px;align-items:center;margin-top:10px">
+        <label for="secretCodeInput">Secret Code:</label>
+        <input id="secretCodeInput" placeholder="101" />
+        <button id="secretSubmit">Enter</button>
+        <div id="secretMsg" class="muted-block" style="margin-left:8px"></div>
+      </div>
 
-    <section id="india" class="page"><div class="card"><h2>Contributions (India)</h2><p class="muted-block">Brahmagupta, place-value, modern research.</p></div></section>
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <button id="unlockBtn" disabled>Unlock</button>
+        <button id="newQBtn" disabled>New Question</button>
+      </div>
 
-    <section id="basics" class="page"><div class="card"><h2>Basics</h2><p class="muted-block">Integers: {...,-2,-1,0,1,2,...}</p></div></section>
-
-    <section id="easter" class="page">
-      <div class="card">
-        <h2>Easter Egg</h2>
-        <p class="small-muted">Enter a secret code (one of the valid codes) to unlock a challenge. Animations run fullscreen for 5s.</p>
-
-        <!-- Secret code -->
-        <div style="display:flex;gap:8px;align-items:center;margin-top:10px">
-          <label for="secretCodeInput">Secret Code</label>
-          <input id="secretCodeInput" placeholder="101" />
-          <button id="secretSubmit">Enter</button>
-          <div id="secretMsg" class="small-muted" style="margin-left:10px"></div>
-        </div>
-
-        <!-- Controls -->
-        <div style="display:flex;gap:8px;margin-top:12px">
-          <button id="unlockBtn" disabled>Unlock (same code)</button>
-          <button id="newQBtn" disabled>New Question</button>
-        </div>
-
-        <!-- Challenge area -->
-        <div id="challenge" style="margin-top:12px;display:none">
-          <div class="card">
-            <div id="qText" style="font-weight:700"></div>
-            <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
-              <input id="answerInput" placeholder="Type answer" />
-              <button id="submitAnswer">Submit</button>
-            </div>
-            <div id="fb" class="muted-block" style="margin-top:10px"></div>
+      <div id="challenge" style="margin-top:12px;display:none">
+        <div class="card">
+          <div id="qText" style="font-weight:700"></div>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <input id="answerInput" placeholder="answer" />
+            <button id="submitAnswer">Submit</button>
           </div>
+          <div id="fb" class="muted-block" style="margin-top:8px"></div>
         </div>
       </div>
-    </section>
+    </div></section>
+
   </div>
 
   <canvas id="overlayCanvas"></canvas>
 
   <script>
-    // Defensive, single-file fix. If anything still fails, copy console output and paste here.
+    // Debug-friendly robust initialization
+    console.log('Debug build starting...');
     (function(){
-      try{
-        console.log('Fixed build: init');
-
-        // Navigation
-        const navLinks = Array.from(document.querySelectorAll('#nav a'));
-        navLinks.forEach(a=>{
-          a.addEventListener('click', (e)=>{
-            e.preventDefault();
-            const page = a.dataset.page;
-            if(!page) return;
-            document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-            const target = document.getElementById(page);
-            if(target) target.classList.add('active');
-            navLinks.forEach(n=>n.classList.remove('active'));
-            a.classList.add('active');
-            console.log('nav ->', page);
-          });
+      // elements
+      const links = document.querySelectorAll('#nav a');
+      const pages = document.querySelectorAll('.page');
+      links.forEach(link=>{
+        link.addEventListener('click', e=>{
+          e.preventDefault();
+          const page = link.dataset.page;
+          console.log('nav click', page);
+          document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+          const target = document.getElementById(page);
+          if(target){ target.classList.add('active'); }
+          links.forEach(l=>l.classList.remove('active'));
+          link.classList.add('active');
         });
+      });
 
-        // Elements for Easter Egg
-        const secretInput = document.getElementById('secretCodeInput');
-        const secretSubmit = document.getElementById('secretSubmit');
-        const secretMsg = document.getElementById('secretMsg');
-        const unlockBtn = document.getElementById('unlockBtn');
-        const newQBtn = document.getElementById('newQBtn');
-        const challengeDiv = document.getElementById('challenge');
-        const qText = document.getElementById('qText');
-        const answerInput = document.getElementById('answerInput');
-        const submitAnswer = document.getElementById('submitAnswer');
-        const fb = document.getElementById('fb');
-        const overlayCanvas = document.getElementById('overlayCanvas');
+      // Easter elements
+      const secretInput = document.getElementById('secretCodeInput');
+      const secretSubmit = document.getElementById('secretSubmit');
+      const secretMsg = document.getElementById('secretMsg');
+      const unlockBtn = document.getElementById('unlockBtn');
+      const newQBtn = document.getElementById('newQBtn');
+      const challengeDiv = document.getElementById('challenge');
+      const qText = document.getElementById('qText');
+      const answerInput = document.getElementById('answerInput');
+      const submitAnswer = document.getElementById('submitAnswer');
+      const fb = document.getElementById('fb');
+      const overlayCanvas = document.getElementById('overlayCanvas');
 
-        if(!overlayCanvas){
-          console.error('overlayCanvas element missing');
-          return;
-        }
+      if(!overlayCanvas){ console.error('overlayCanvas missing'); }
 
-        const ctx = overlayCanvas.getContext && overlayCanvas.getContext('2d');
-        if(!ctx){
-          console.error('Canvas context could not be created');
-        }
+      const pool = [
+        {id:'101', q:'What is -7 + 12?', a:'5'},
+        {id:'202', q:'Which is an integer: 3.14, -8, √2?', a:'-8'},
+        {id:'303', q:'What is (-2)*(-2)?', a:'4'},
+        {id:'404', q:'If you subtract -5 from 2 what is the result?', a:'7'},
+        {id:'505', q:'Integer division 7 ÷ 3 (truncate) = ?', a:'2'}
+      ];
 
-        // Data
-        const VALID = ['101','202','303','404','505'];
-        const pool = [
-          {id:'101', q:'What is -7 + 12?', a:'5'},
-          {id:'101', q:'If x = -3 and y = -4, what is x * y?', a:'12'},
-          {id:'202', q:'Which is an integer: 3.14, -8, √2?', a:'-8'},
-          {id:'202', q:'What is 0 times any integer?', a:'0'},
-          {id:'303', q:'What is (-2) * (-2)?', a:'4'},
-          {id:'303', q:'Which integer is even: 3, 11, -4, 7?', a:'-4'},
-          {id:'404', q:'If you subtract -5 from 2, what is the result?', a:'7'},
-          {id:'404', q:'Which is greater: -1 or -100?', a:'-1'},
-          {id:'505', q:'Integer division 7 ÷ 3 (truncate) = ?', a:'2'},
-          {id:'505', q:'Round -2.7 towards zero gives?', a:'-2'}
-        ];
+      function validCode(code){ return ['101','202','303','404','505'].includes(code); }
+      function pickQuestionFor(code){ const list = pool.filter(x=>x.id===code); if(!list.length) return null; return list[Math.floor(Math.random()*list.length)]; }
 
-        function validCode(c){ return VALID.includes(String(c).trim()); }
-        function pickFor(code){ const list = pool.filter(x=>x.id===code); return list.length ? list[Math.floor(Math.random()*list.length)] : null; }
+      let current=null; let currentCode=null;
 
-        let current = null;
-        let currentCode = null;
+      secretSubmit.addEventListener('click', ()=>{
+        const val = (secretInput.value||'').trim(); console.log('secret entered:',val);
+        if(!validCode(val)){ secretMsg.textContent='Invalid'; secretMsg.style.color='#ff7b7b'; unlockBtn.disabled=true; newQBtn.disabled=true; challengeDiv.style.display='none'; current=null; currentCode=null; return; }
+        secretMsg.textContent='Accepted'; secretMsg.style.color='var(--accent)'; currentCode=val; unlockBtn.disabled=false; newQBtn.disabled=false; current=pickQuestionFor(currentCode); if(current){ showChallenge(); triggerAnimation(currentCode); }
+      });
 
-        // UI helpers
-        function enableControlsFor(code){
-          currentCode = code;
-          unlockBtn.disabled = false;
-          newQBtn.disabled = false;
-          secretMsg.textContent = 'Code accepted';
-          secretMsg.style.color = 'var(--accent)';
-        }
-        function disableControls(){
-          currentCode = null;
-          unlockBtn.disabled = true;
-          newQBtn.disabled = true;
-          secretMsg.textContent = '';
-        }
+      unlockBtn.addEventListener('click', ()=>{ if(!currentCode) return; current=pickQuestionFor(currentCode); if(current) { showChallenge(); triggerAnimation(currentCode); } });
+      newQBtn.addEventListener('click', ()=>{ if(!currentCode) return; current=pickQuestionFor(currentCode); if(current) { showChallenge(); triggerAnimation(currentCode); } });
 
-        // Secret code submit
-        secretSubmit.addEventListener('click', ()=>{
-          const v = (secretInput.value||'').trim();
-          console.log('secret submit', v);
-          if(!validCode(v)){
-            secretMsg.textContent = 'Invalid code';
-            secretMsg.style.color = '#ff7b7b';
-            disableControls();
-            challengeDiv.style.display = 'none';
-            current = null;
-            return;
-          }
-          enableControlsFor(v);
-          // Immediately pick and show a question for that code
-          current = pickFor(v);
-          if(current){
-            showQuestion();
-            triggerAnimation(v, 'start');
-          } else {
-            console.warn('No question for code', v);
-          }
-        });
+      function showChallenge(){ if(!current) return; challengeDiv.style.display='block'; qText.textContent=current.q; answerInput.value=''; fb.textContent=''; }
 
-        // Unlock / New question
-        unlockBtn.addEventListener('click', ()=>{
-          if(!currentCode) return;
-          current = pickFor(currentCode);
-          if(current){ showQuestion(); triggerAnimation(currentCode, 'start'); }
-        });
-        newQBtn.addEventListener('click', ()=>{
-          if(!currentCode) return;
-          current = pickFor(currentCode);
-          if(current){ showQuestion(); triggerAnimation(currentCode, 'start'); }
-        });
+      submitAnswer.addEventListener('click', ()=>{
+        const ans=(answerInput.value||'').trim(); console.log('submit answer',ans,'expected',current?current.a:null);
+        if(!current){ fb.textContent='No question active'; fb.style.color='#ff7b7b'; return; }
+        if(ans.toLowerCase()===current.a.toLowerCase()){ fb.textContent='Correct ✅'; fb.style.color='#9be66c'; triggerAnimation(currentCode,'correct'); } else { fb.textContent='Incorrect ❌'; fb.style.color='#ff7b7b'; triggerAnimation(currentCode,'wrong'); }
+      });
 
-        function showQuestion(){
-          if(!current) return;
-          challengeDiv.style.display = 'block';
-          qText.textContent = current.q;
-          answerInput.value = '';
-          fb.textContent = '';
-        }
+      // canvas setup
+      const ctx = overlayCanvas.getContext? overlayCanvas.getContext('2d') : null;
+      let W=0,H=0;
+      function resize(){ if(!overlayCanvas) return; W=overlayCanvas.width=overlayCanvas.clientWidth; H=overlayCanvas.height=overlayCanvas.clientHeight; }
+      window.addEventListener('resize', resize);
+      // NOTE: do not rely on canvas client size while hidden; resize() will be called again when showing it
+      resize();
+      let animFrame=null, stopTimeout=null;
+      function clearAnim(){ if(animFrame) cancelAnimationFrame(animFrame); animFrame=null; if(stopTimeout) clearTimeout(stopTimeout); stopTimeout=null; if(ctx) ctx.clearRect(0,0,W,H); overlayCanvas.style.display='none'; }
 
-        // Submit answer
-        submitAnswer.addEventListener('click', ()=>{
-          const ans = (answerInput.value||'').trim();
-          if(!current){ fb.textContent = 'No active question'; fb.style.color = '#ff7b7b'; return; }
-          if(ans === ''){ fb.textContent = 'Please enter answer'; fb.style.color = '#ffd24d'; return; }
-          if(String(ans).toLowerCase() === String(current.a).toLowerCase()){
-            fb.textContent = 'Correct ✅';
-            fb.style.color = '#9be66c';
-            triggerAnimation(currentCode,'correct');
-          } else {
-            fb.textContent = 'Incorrect ❌';
-            fb.style.color = '#ff7b7b';
-            triggerAnimation(currentCode,'wrong');
-          }
-        });
-
-        // Canvas / animation plumbing
-        let W=0, H=0;
-        function resizeCanvas(){
-          W = overlayCanvas.width = overlayCanvas.clientWidth;
-          H = overlayCanvas.height = overlayCanvas.clientHeight;
-        }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
-
-        let rafId = null, stopT = null;
-        function clearAnimation(){
-          try{ if(rafId) cancelAnimationFrame(rafId); rafId = null; }
-          catch(e){ console.error('cancel frame error', e); }
-          if(stopT){ clearTimeout(stopT); stopT = null; }
-          if(ctx) ctx.clearRect(0,0,W,H);
-          overlayCanvas.style.display = 'none';
-        }
-
-        // Start animation for code
-        function triggerAnimation(code, state){
-          try{
-            if(!code){ console.warn('triggerAnimation called without code'); return; }
-            console.log('triggerAnimation', code, state);
-            clearAnimation();
-            overlayCanvas.style.display = 'block';
-            // small fade-in background (draw once)
-            if(ctx){ ctx.fillStyle = 'rgba(0,0,0,0.12)'; ctx.fillRect(0,0,W,H); }
-
-            if(code === '101') animBurst();
-            else if(code === '202') animConfetti();
-            else if(code === '303') animNumberRain();
-            else if(code === '404') animGlitch();
-            else if(code === '505') animOrbit();
-            else console.warn('Unknown code for animation:', code);
-
-            // ensure stop after ~5s
-            stopT = setTimeout(()=>{ clearAnimation(); console.log('animation ended (auto-stop)'); }, 5000);
-          }catch(err){
-            console.error('triggerAnimation error', err);
-          }
-        }
-
-        // Simple animation implementations (safe)
-        function animBurst(){
-          if(!ctx) return;
-          const parts = [];
-          for(let i=0;i<160;i++){
-            parts.push({
-              x:W/2, y:H/2,
-              vx:(Math.random()-0.5)*14, vy:(Math.random()-0.5)*14,
-              r:Math.random()*4+1, life: Math.random()*120+40, t:0,
-              hue: 40 + Math.random()*30
-            });
-          }
-          function loop(){
-            ctx.clearRect(0,0,W,H);
-            for(const p of parts){
-              p.x += p.vx; p.y += p.vy; p.vy += 0.08; p.t++;
-              const alpha = Math.max(0, 1 - p.t / p.life);
-              ctx.fillStyle = `hsla(${p.hue},90%,60%,${alpha})`;
-              ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
-            }
-            rafId = requestAnimationFrame(loop);
-          }
-          loop();
-        }
-
-        function animConfetti(){
-          if(!ctx) return;
-          const conf = []; const cols = ['#ffd24d','#66d9ff','#ff8fb3','#9be66c'];
-          for(let i=0;i<140;i++) conf.push({x:Math.random()*W, y:Math.random()*-H, vy:Math.random()*1.6+0.6, w:Math.random()*12+6, rot:Math.random()*Math.PI, col:cols[Math.floor(Math.random()*cols.length)]});
-          function loop(){
-            ctx.clearRect(0,0,W,H);
-            for(const c of conf){
-              c.y += c.vy; c.x += Math.sin(c.y/60)*0.6;
-              ctx.save(); ctx.translate(c.x,c.y); ctx.rotate(c.rot);
-              ctx.fillStyle = c.col; ctx.fillRect(-c.w/2, -c.w/2, c.w, c.w*1.4);
-              ctx.restore();
-              if(c.y > H + 40){ c.y = -40; c.x = Math.random()*W; }
-            }
-            rafId = requestAnimationFrame(loop);
-          }
-          loop();
-        }
-
-        function animNumberRain(){
-          if(!ctx) return;
-          const chars = ['0','1','2','3','4','5','6','7','8','9','-'];
-          const drops = [];
-          for(let i=0;i<Math.floor(W/12);i++) drops.push({x:i*12+Math.random()*12, y:Math.random()*-H, vy:Math.random()*4+2});
-          function loop(){
-            ctx.fillStyle = 'rgba(0,0,0,0.12)'; ctx.fillRect(0,0,W,H);
-            ctx.font = '16px monospace'; ctx.fillStyle = 'rgba(255,255,255,0.9)';
-            for(const d of drops){
-              d.y += d.vy;
-              const ch = chars[Math.floor(Math.random()*chars.length)];
-              ctx.fillText(ch, d.x, d.y);
-              if(d.y > H + 20) d.y = Math.random()*-100;
-            }
-            rafId = requestAnimationFrame(loop);
-          }
-          loop();
-        }
-
-        function animGlitch(){
-          if(!ctx) return;
-          let t = 0;
-          function loop(){
-            ctx.clearRect(0,0,W,H);
-            const g = ctx.createLinearGradient(0,0,W,H); g.addColorStop(0,'#051421'); g.addColorStop(1,'#0b1430'); ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
-            ctx.font = '120px serif'; ctx.textAlign = 'center';
-            ctx.fillStyle = 'rgba(255,210,77,0.16)';
-            ctx.fillText('ERROR', W/2 + Math.sin(t/10)*8, H/2 + Math.cos(t/8)*8);
-            t += 1;
-            rafId = requestAnimationFrame(loop);
-          }
-          loop();
-        }
-
-        function animOrbit(){
-          if(!ctx) return;
-          const objs = []; const cx = W/2, cy = H/2;
-          for(let i=0;i<12;i++) objs.push({angle:Math.random()*Math.PI*2, r:80+i*18, speed:0.01+i*0.002, val: (i%2?i:-i)});
-          function loop(){
-            ctx.fillStyle='rgba(0,0,0,0.12)'; ctx.fillRect(0,0,W,H);
-            ctx.font='20px monospace'; ctx.textAlign='center';
-            for(const o of objs){ o.angle += o.speed; const x = cx + Math.cos(o.angle)*o.r; const y = cy + Math.sin(o.angle)*o.r; ctx.fillStyle='rgba(255,255,255,0.95)'; ctx.fillText(o.val, x, y); }
-            rafId = requestAnimationFrame(loop);
-          }
-          loop();
-        }
-
-        console.log('Fixed build ready - try Easter Egg, code 101, 202, 303, 404, 505');
-      }catch(e){
-        console.error('Initialization error', e);
+      function triggerAnimation(code,state){ console.log('triggerAnimation',code,state);
+        if(!code) return;
+        // clear previous animation first
+        clearAnim();
+        // show canvas, then resize so width/height are correct
+        overlayCanvas.style.display='block';
+        resize(); // <<< IMPORTANT FIX: set canvas size AFTER making it visible
+        // start selected animation
+        if(code==='101') animBurst();
+        if(code==='202') animConfetti();
+        if(code==='303') animNumberRain();
+        if(code==='404') animGlitch();
+        if(code==='505') animOrbit();
+        // stop after 5s
+        stopTimeout = setTimeout(()=>{ clearAnim(); console.log('animation stopped'); },5000);
       }
+
+      // animations (simple, safe)
+      function animBurst(){ if(!ctx) return; const parts=[]; for(let i=0;i<160;i++){ parts.push({x:W/2,y:H/2,vx:(Math.random()-0.5)*12,vy:(Math.random()-0.5)*12,r:Math.random()*4+1,life:Math.random()*100+40,age:0}); }
+        function loop(){ ctx.clearRect(0,0,W,H); for(const p of parts){ p.x+=p.vx; p.y+=p.vy; p.vy+=0.12; p.age++; ctx.globalAlpha=Math.max(0,1-p.age/p.life); ctx.fillStyle='rgba(255,210,77,'+ctx.globalAlpha+')'; ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill(); } animFrame=requestAnimationFrame(loop); }
+        loop(); }
+
+      function animConfetti(){ if(!ctx) return; const conf=[]; const cols=['#ffd24d','#66d9ff','#ff8fb3','#9be66c']; for(let i=0;i<120;i++){ conf.push({x:Math.random()*W,y:Math.random()*-H,vy:Math.random()*1.6+0.6,w:Math.random()*12+6,col:cols[Math.floor(Math.random()*cols.length)],rot:Math.random()*Math.PI}); }
+        function loop(){ ctx.clearRect(0,0,W,H); for(const c of conf){ c.y+=c.vy; c.x+=Math.sin(c.y/60)*0.6; ctx.save(); ctx.translate(c.x,c.y); ctx.rotate(c.rot); ctx.fillStyle=c.col; ctx.fillRect(-c.w/2,-c.w/2,c.w,c.w*1.4); ctx.restore(); if(c.y>H+40){ c.y=-40; c.x=Math.random()*W; } } animFrame=requestAnimationFrame(loop); }
+        loop(); }
+
+      function animNumberRain(){ if(!ctx) return; const chars=['0','1','2','3','4','5','6','7','8','9','-']; const drops=[]; for(let i=0;i<Math.floor(W/12);i++) drops.push({x:i*12+Math.random()*12,y:Math.random()*-H,vy:Math.random()*4+2});
+        function loop(){ ctx.fillStyle='rgba(0,0,0,0.08)'; ctx.fillRect(0,0,W,H); ctx.font='16px monospace'; ctx.fillStyle='rgba(255,255,255,0.9)'; for(const d of drops){ d.y+=d.vy; const ch=chars[Math.floor(Math.random()*chars.length)]; ctx.fillText(ch,d.x,d.y); if(d.y>H+20) d.y=Math.random()*-100; } animFrame=requestAnimationFrame(loop); }
+        loop(); }
+
+      function animGlitch(){ if(!ctx) return; let t=0; function loop(){ ctx.clearRect(0,0,W,H); const g=ctx.createLinearGradient(0,0,W,H); g.addColorStop(0,'#051421'); g.addColorStop(1,'#0b1430'); ctx.fillStyle=g; ctx.fillRect(0,0,W,H); ctx.font='120px serif'; ctx.textAlign='center'; ctx.fillStyle='rgba(255,210,77,0.16)'; ctx.fillText('ERROR',W/2+Math.sin(t/10)*8,H/2+Math.cos(t/8)*8); t+=1; animFrame=requestAnimationFrame(loop); } loop(); }
+
+      function animOrbit(){ if(!ctx) return; const objs=[]; const cx=W/2,cy=H/2; for(let i=0;i<12;i++) objs.push({angle:Math.random()*Math.PI*2,r:80+i*20,speed:0.01+i*0.002,val:(i%2?i:-i)});
+        function loop(){ ctx.fillStyle='rgba(0,0,0,0.08)'; ctx.fillRect(0,0,W,H); ctx.font='20px monospace'; ctx.textAlign='center'; for(const o of objs){ o.angle+=o.speed; const x=cx+Math.cos(o.angle)*o.r; const y=cy+Math.sin(o.angle)*o.r; ctx.fillStyle='rgba(255,255,255,0.95)'; ctx.fillText(o.val,x,y); } animFrame=requestAnimationFrame(loop); } loop(); }
+
+      console.log('Debug init complete');
     })();
   </script>
 </body>
 </html>
+
